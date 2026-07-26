@@ -1,0 +1,12 @@
+Exercise 4.3
+Use the following program  to estimate the instruction execution rate for PCSPim running on your computer (you may have to adjust the "time factor").
+
+See ex_4_3-exec_rate.s for program listing.
+
+
+Solution 4.3
+Running on QtSpim on Ubuntu 20.40 on a Dell XPS 13 9310 (11th Gen Intel(R) Core(TM) i7-1165G7 (8) @ 4.70 GHz), the program listing as-is runs too fast to time with a stopwatch manually. Adjusting the time factor to 7,500,000 causes the program to run for about 36 seconds. Adjusting the time factor to 1,250,000,000 causes the program to run in about 60 seconds manually timed.
+The resulting program is in ex_4_3-exec_rate-2.s
+
+TODO
+Figure out a way to time this with the host timing measurement.
