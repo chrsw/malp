@@ -1,0 +1,13 @@
+1.2 Explain the difference between assembly language and machine language.
+
+
+Assembly language is the human readable listing of a program that uses
+natural language words for instructions, literal numbers for parameters,
+labels, and comments. Assembly language files are plain text files
+using some kind of character encoding like ASCII that capture the program
+listing and program metadata.
+
+Machine language is the native format for the machine's ISA and is usually
+binary encoded to be directly executed by a machine or ISA implementation.
+
+Assemblers are programs that generate machine code from assembly listing.
