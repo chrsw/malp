@@ -1,0 +1,14 @@
+Exercise 2.1  Using Apprendix A, translate each of the following pseudocode
+expressions into MIPS assembly langauge:
+
+(a) t3 = t4 + t5 - t6;
+
+
+Solution 2.1
+
+
+(a)
+sub $t5, $t5, $t6
+add $t3, $t4, $t5
+
+
