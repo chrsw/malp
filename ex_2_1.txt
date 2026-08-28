@@ -3,6 +3,7 @@ expressions into MIPS assembly langauge:
 
 (a) t3 = t4 + t5 - t6;
 (b) s3 = t2 / (s1 - 54321);
+(c) sp = sp - 16;
 
 
 Solution 2.1
@@ -16,3 +17,6 @@ add $t3, $t4, $t5
 li $t0, 54321
 sub $s1, $s1, $t0
 div $s3, $t2, $s1
+
+(c)
+sub $sp, $sp, 16
