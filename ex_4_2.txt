@@ -1,0 +1,13 @@
+Exercise 4.2  What is the character string corresponding to the following
+ASCII codes?
+0x2a2a2a2a 0x69644120 0x4120736f 0x6f67696d 0x48202d20 0x20657661
+(_Hint_: Remember that for simulations running on Intel-based platforms,
+the characters are stored in reverse order within each word.
+
+
+Solution 4.2
+0x2a2a2a2a 0x69644120 0x4120736f 0x6f67696d 0x48202d20 0x20657661
+   * * * *    i d A      A   s o    o g i m    H   -        e v a
+Rearranging the byte order and reformatting...
+**** Adios Amigo - Have 
+
