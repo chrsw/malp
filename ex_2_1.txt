@@ -4,7 +4,9 @@ expressions into MIPS assembly langauge:
 (a) t3 = t4 + t5 - t6;
 (b) s3 = t2 / (s1 - 54321);
 (c) sp = sp - 16;
-
+(d) cout << t3;
+(e) cin >> t0;
+(f) a0 = &array;
 
 Solution 2.1
 
@@ -20,3 +22,19 @@ div $s3, $t2, $s1
 
 (c)
 sub $sp, $sp, 16
+
+(d)
+li $v0, 1
+move $a0, $t3
+syscall
+
+(e)
+li $v0, 5
+syscall
+move $t0, $v0
+
+(f)
+        .data
+array:  .space 4096
+la $a0, array
+
