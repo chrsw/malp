@@ -36,5 +36,6 @@ move $t0, $v0
 (f)
         .data
 array:  .space 4096
+        .text
 la $a0, array
 
