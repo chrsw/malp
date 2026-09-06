@@ -1,0 +1,18 @@
+Exercise 3.10  Convert the decimal number -35 to an 8-bit two's complement
+binary number
+
+Solution 3.10
+Two's complement polynomial expansion from Section 3.8:
+N = -d7 * 2^7 + d6 * 2^6 + d5 * 2^5 + .... + d1 * 2 + d0
+To do the conversion we follow the method from Section 3.9:
+35 in base 10 is 00100011 in base 2
+Converting 00100011 to two's complement:
+Start with the positive binary value:
+00100011
+Invert it:
+11011100
+Add one:
+11011100
+     + 1
+--------
+11011101
