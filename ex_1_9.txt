@@ -1,0 +1,29 @@
+Exercise 1.9  Provide a step-by-step description of the sequence of operations
+that must take place within a MIPS processor to fetch and execute the "store
+word" instruction.
+
+
+Solution 1.9
+Similar to the "Load Word" sequence from Exercise 1.8 (see `ex_1_8.txt`).
+Store Word
+sw  Rt, offset(Rs)
+
+Stores a word to memory at location specified in `Rs` with an optional
+`offset`. The stored word value comes from `Rt`. This is an _immediate format_
+instruction.
+1. The MIPS CPU fetches the next instruction from the `PC` which is
+basically a register that tells the CPU where to get the next instruction.
+2. For the purpose of this exercise the next instruction is the Store Word
+instruction.
+3. The instruction is fetched from the address specified in the `PC` into
+the `IR` and the PC is incremented by 4 (instructions are 32-bits).
+4. Two 5-bit operands in the `SW` instruction specify the source and
+destination registers. The `Rs` specifies the memory address to fetch
+from the `Rt` specifies the 32-bit register the word value will be stored
+into memory. The `SW` opcode is decoded.
+5. The instruction is executed. The CPU adds the optional offset to the
+value from the `Rs` register and the CPU performs a memory write at the
+specified address. The value to store is taken from the `Rt` register.
+6. The 32-bit value is stored into memory with a memory write. This is the
+result of the operation, the operation is finished and the CPU executes the
+next instruction.
