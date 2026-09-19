@@ -1,0 +1,45 @@
+Exercise 3.24 You are given the following two 8-bit binary numbers in the
+two's complement number system:
+
+X = 10010100 (2's comp) =  ?? (base 10)  Y = 00101100 (2's comp) = ?? (base 10)
+
+What values do these numbers represent in decimal? Perform the following
+arithmetic operations on X and Y:
+
+        X + Y               X - Y               Y - X
+    10010100             10010100           00101100
+    00101100
+
+Show your answers as 8-bit binary numbers in the two's complement number
+system. To subtract Y from X, find the two's complement & and add it to X.
+Indicate whether overflow occurs in performing any of these operations.
+Now show a solution to the same arithmetic problems using the hexadecimal
+representations of X and Y.
+
+
+Solution 3.24
+X = 10010100 (2's comp) =  ?? (base 10)  Y = 00101100 (2's comp) = ?? (base 10)
+First, converting X and Y from two's complement to decimal
+For X, it leads with 1 so it is a negative number. To find the decimal value,
+invert the number and add 1.
+X = 10010100
+twos(10010100) = inv(10010100) + 1 = 01101011 + 1
+01101011
+       1
+--------
+01101100 = 0x6C = 110
+X is negative so X is -110
+Y is positive so Y is 44
+-44 = inv(00101100) + 1 = 11010011 + 1 = 11010100
+
+
+        X + Y
+      10010100
+      00101100
+ 
+      01101100
++     11010110
+      --------
+      01000010
+      66 = 0x42
+      
