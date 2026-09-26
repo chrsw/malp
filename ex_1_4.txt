@@ -1,0 +1,13 @@
+Exercise 1.4 Explain the difference between the IR and the PC.
+
+
+Solution 1.4
+IR is Instruction Register and contains the bit contents of the currently
+executing instruction.
+PC is the Program Counter and it contains the address of the next instruction
+that will execute, unless changed by the currently executing instruction.
+The CPU fetches the next instruction to execute when it's time to execute
+the next instruction, from the address in the PC. The instruction is
+fetched from that addressed and placed into the IR.
+While the instruction is executing, the contents of the instruction, like the
+opcode, parameters and immediate data are encoded in the IR.
