@@ -1,0 +1,19 @@
+Exercise 5.3  Write a MIPS function called ABS that accepts an integer
+word in register $a0 and returns its aboslute value in $a0. Also, show
+an example code segment that calls the ABS function twice, so test
+the function for two different input values.
+
+
+Solution 5.3
+Psuedocode description
+if a0 is less than a0
+multiply a0 by -1
+if not, do nothing
+
+ABS:
+        blez    $a0, Return
+        li      $t0, -1
+        mult    $a0, $t0
+Return:
+        jr      $ra
+        
