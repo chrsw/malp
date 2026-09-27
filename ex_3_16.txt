@@ -1,0 +1,13 @@
+Exercsie 3.16 Convert the base 5 number 204 to a decimal number.
+
+
+Solution 3.16
+Base 5
+0
+1
+2
+3
+4
+204 = 2 * 5^2 + 0 * 5^1 + 4 * 5^0 = 2 * 25 + 0 * 5 + 4 * 1 = 50 + 4 = 54
+
+54

@@ -1,0 +1,15 @@
+Exercsie 3.14 Convert the base 7 number 204 to a decimal number.
+
+
+Solution 3.14
+Base 7
+0
+1
+2
+3
+4
+5
+6
+204 = 2 * 7^2 + 0 * 7^1 + 4 * 7^0 = 2 * 49 + 0 * 7 + 4 * 1 = 98 + 0 + 4 = 102
+
+102
