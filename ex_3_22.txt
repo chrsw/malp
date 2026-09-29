@@ -1,0 +1,11 @@
+Exercise 3.22  Sign extend the two-digit hex number 0x88 to a four-digit
+hex number.
+
+
+Solution 3.22
+0x88 = 10001000
+xxxx xxxx xxxx xxxx xxxx xxxx 10001000
+Assuming 0x88 is a two's complement number then we simply extend the 8-
+bit MSB to the rest of the word:
+
+1111 1111 1111 1111 1111 1111 10001000
