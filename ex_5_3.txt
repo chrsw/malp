@@ -5,7 +5,7 @@ the function for two different input values.
 
 
 Solution 5.3
-Psuedocode description
+Psuedocode description:
 if a0 is less than a0
 multiply a0 by -1
 if not, do nothing
@@ -16,4 +16,18 @@ ABS:
         mult    $a0, $t0
 Return:
         jr      $ra
-        
+
+Using this function:
+
+main:
+        li      $a0, 5
+        jal     ABS
+        li      $v0, 1
+        syscall
+        li      $a0, -5
+        jal     ABS
+        li      $v0, 1
+        syscall
+End:
+        li      $a0, 10
+        syscall 
