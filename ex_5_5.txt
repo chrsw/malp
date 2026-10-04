@@ -1,0 +1,29 @@
+Exercise 5.5  Write a function `SUM(N)` to find the sum of the integers
+from 1 to N, making use of the multiplication and shifting operations.
+The value N will be passed to the function in $a0 and the result will
+be returned in the $v0 register. Then write a MIPS assembly language
+main program that will call the SUM function five times each time passing
+a different value to the function for N, and then printing the results.
+The values for N are defined as follows:
+
+        N:      .word 9, 10, 32666, 654321
+
+Solution 5.5
+The formula for finding the sum of all integers from 1 to N is called
+the Gause formula and its definition is:
+
+    SUM = (N * (N + 1)) / 2
+
+Shift left divides by 2 and MIPS has a multiply instruction.
+So the general strategy for finding the solution to this problem is
+take the number passed in on $a0, add one, multiply by the original
+$a0 and divide by 2, store in $v0.
+$v0 = ($a0 * ($a0 + 1) / 2
+
+
+SUM:
+        addi    $t0, $a0, 1
+        mult    $t0, $t0, $a0
+        sra     $v0, $t0, 1
+Return:
+        jr      $ra
