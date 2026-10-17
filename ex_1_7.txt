@@ -1,0 +1,11 @@
+Exercise 1.7  What is an `algorithm`?
+
+
+Solution 1.7
+An algorithm is a step-by-step solution to a problem. In terms of digital
+computation, a algorithm can be written as a list of computer instructions.
+Given a problem and inputs or initial conditions, the algorithm will end up
+with a solution when executed on a computer. Algorithms are ranked by their
+efficient use of resources like computation time and memory. Algorithm
+performance with respect to the size of their inputs can be expressed with
+big-O notation, short for "on the Order of".
