@@ -1,0 +1,9 @@
+Exercise 1.6  Identify a kitchen appliance that contains a control unit that issues
+control signals.
+
+
+Solution 1.6
+A microwave has a control unit that controls a display, fans, a magnetron and a plate
+motor. The control signals from the microwave control unit controls fans speed, digital
+displays, a magnetron for high frequency microwaves, fans to cool or distribute air,
+signals to deliver power to the microwave antenna, etc.
