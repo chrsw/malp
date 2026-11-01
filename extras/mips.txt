@@ -1,0 +1,533 @@
+*mips.txt*	MIPS32 / SPIM assembly quick reference
+
+==============================================================================
+CONTENTS						*mips* *mips-contents*
+
+    1. Notation .............................. |mips-notation|
+    2. Registers ............................. |mips-registers|
+    3. Arithmetic ............................ |mips-arith|
+    4. Logical ............................... |mips-logical|
+    5. Shifts and rotates .................... |mips-shifts|
+    6. Comparisons (set) ..................... |mips-compare|
+    7. Constants and moves ................... |mips-moves|
+    8. Branches .............................. |mips-branches|
+    9. Jumps and calls ....................... |mips-jumps|
+   10. Loads and stores ...................... |mips-memory|
+   11. Floating point (coprocessor 1) ........ |mips-float|
+   12. Exceptions and coprocessor 0 .......... |mips-cp0|
+   13. Assembler directives .................. |mips-directives|
+   14. SPIM system calls ..................... |mips-syscalls|
+   15. Calling convention .................... |mips-calling|
+   16. SPIM simulator notes .................. |mips-spim|
+
+Press K on an instruction, directive or register name in a MIPS buffer to
+jump to its entry. Use CTRL-T or CTRL-O to go back.
+
+==============================================================================
+1. Notation						*mips-notation*
+
+    rd, rs, rt     general purpose registers (rd = destination)
+    imm            16-bit immediate in the instruction
+    sext(imm)      imm sign-extended to 32 bits
+    zext(imm)      imm zero-extended to 32 bits
+    hi, lo         multiply/divide result registers
+    label          a code or data label
+    off(base)      address = base register + sext(off)
+    [PSEUDO]       pseudo-instruction: the assembler expands it into one or
+                   more real instructions, usually using $at
+
+Trap on overflow: the signed forms (add, addi, sub) raise an arithmetic
+overflow exception. The "unsigned" forms (addu, addiu, subu) never trap;
+the name refers to the missing trap, not to how the operands are treated.
+
+==============================================================================
+2. Registers					*mips-registers* *mips-regs*
+
+    Number   Name        Use                                  Preserved?
+    $0       $zero       always reads as 0, writes ignored    n/a
+    $1       $at         assembler temporary (pseudo-ops)     no
+    $2-$3    $v0-$v1     function results, syscall code       no
+    $4-$7    $a0-$a3     first four arguments                 no
+    $8-$15   $t0-$t7     temporaries                          no
+    $16-$23  $s0-$s7     saved registers                      yes
+    $24-$25  $t8-$t9     temporaries                          no
+    $26-$27  $k0-$k1     reserved for the kernel/exceptions   n/a
+    $28      $gp         global pointer                       yes
+    $29      $sp         stack pointer                        yes
+    $30      $fp / $s8   frame pointer                        yes
+    $31      $ra         return address (written by jal)      yes
+
+"Preserved" means a callee that changes the register must restore it before
+returning. See |mips-calling|.
+
+		*mips-zero* *mips-at* *mips-v0* *mips-v1* *mips-a0* *mips-a1*
+		*mips-a2* *mips-a3* *mips-t0* *mips-t1* *mips-t2* *mips-t3*
+		*mips-t4* *mips-t5* *mips-t6* *mips-t7* *mips-t8* *mips-t9*
+		*mips-s0* *mips-s1* *mips-s2* *mips-s3* *mips-s4* *mips-s5*
+		*mips-s6* *mips-s7* *mips-s8* *mips-k0* *mips-k1* *mips-gp*
+		*mips-sp* *mips-fp* *mips-ra*
+These tags all lead to the table above.
+
+                                              *mips-fregs* *mips-hi* *mips-lo*
+Other registers:
+    $f0-$f31   floating point registers (coprocessor 1). Doubles use an
+               even/odd pair and are named by the even register.
+    hi, lo     results of mult/multu/div/divu. Read with mfhi/mflo.
+    pc         program counter, not directly addressable.
+
+==============================================================================
+3. Arithmetic							*mips-arith*
+
+							*mips-add*
+add     rd, rs, rt      rd = rs + rt                      traps on overflow
+							*mips-addu*
+addu    rd, rs, rt      rd = rs + rt                      no trap
+							*mips-addi*
+addi    rt, rs, imm     rt = rs + sext(imm)               traps on overflow
+							*mips-addiu*
+addiu   rt, rs, imm     rt = rs + sext(imm)               no trap
+        The immediate is still sign-extended, so this is the usual way to
+        adjust the stack pointer: >
+            addiu   $sp, $sp, -24       # allocate a 24-byte frame
+<
+							*mips-sub*
+sub     rd, rs, rt      rd = rs - rt                      traps on overflow
+							*mips-subu*
+subu    rd, rs, rt      rd = rs - rt                      no trap
+        There is no "subi". Use addi/addiu with a negative immediate.
+
+						*mips-mult* *mips-multu*
+mult    rs, rt          hi:lo = rs * rt                   signed 64-bit
+multu   rs, rt          hi:lo = rs * rt                   unsigned 64-bit
+        lo gets the low 32 bits, hi the high 32 bits. Read them with
+        |mips-mfhi| / |mips-mflo|.
+
+							*mips-mul*
+mul     rd, rs, rt      rd = low 32 bits of rs * rt
+        A real instruction on MIPS32. With an immediate as the third
+        operand it is a [PSEUDO]. hi and lo may be overwritten.
+
+						*mips-mulo* *mips-mulou*
+mulo    rd, rs, rt      [PSEUDO] rd = rs * rt, trap if the product does
+mulou   rd, rs, rt      not fit in 32 bits (signed / unsigned)
+
+						*mips-div* *mips-divu*
+div     rs, rt          lo = rs / rt, hi = rs % rt        signed
+divu    rs, rt          lo = rs / rt, hi = rs % rt        unsigned
+        The quotient rounds toward zero, so the remainder has the sign of
+        the dividend. Dividing by zero does not trap on the hardware; the
+        result is undefined.
+div     rd, rs, rt      [PSEUDO] rd = rs / rt (quotient only)
+divu    rd, rs, rt      [PSEUDO] unsigned form. The expansion may include a
+                        divide-by-zero check that executes a break.
+
+						*mips-rem* *mips-remu*
+rem     rd, rs, rt      [PSEUDO] rd = rs % rt   (div, then mfhi)
+remu    rd, rs, rt      [PSEUDO] unsigned form
+
+                               *mips-mfhi* *mips-mflo* *mips-mthi* *mips-mtlo*
+mfhi    rd              rd = hi
+mflo    rd              rd = lo
+mthi    rs              hi = rs
+mtlo    rs              lo = rs
+        On the original R2000/R3000, don't start a mult or div in the two
+        instructions after an mfhi/mflo; the result being read can be
+        corrupted. Later cores interlock.
+
+						*mips-neg* *mips-negu*
+neg     rd, rs          [PSEUDO] rd = -rs   (sub rd, $zero, rs)
+negu    rd, rs          [PSEUDO] rd = -rs   (subu, no trap)
+							*mips-abs*
+abs     rd, rs          [PSEUDO] rd = |rs|, expands to several instructions
+
+==============================================================================
+4. Logical							*mips-logical*
+
+                                    *mips-and* *mips-or* *mips-xor* *mips-nor*
+and     rd, rs, rt      rd = rs AND rt
+or      rd, rs, rt      rd = rs OR rt
+xor     rd, rs, rt      rd = rs XOR rt
+nor     rd, rs, rt      rd = NOT (rs OR rt)
+
+                                            *mips-andi* *mips-ori* *mips-xori*
+andi    rt, rs, imm     rt = rs AND zext(imm)
+ori     rt, rs, imm     rt = rs OR zext(imm)
+xori    rt, rs, imm     rt = rs XOR zext(imm)
+        Logical immediates are zero-extended, unlike arithmetic ones.
+        "ori rt, $zero, imm" loads a 16-bit unsigned constant.
+
+							*mips-not*
+not     rd, rs          [PSEUDO] rd = NOT rs   (nor rd, rs, $zero)
+
+==============================================================================
+5. Shifts and rotates						*mips-shifts*
+
+                                              *mips-sll* *mips-srl* *mips-sra*
+sll     rd, rt, sa      rd = rt << sa                  sa is 0..31
+srl     rd, rt, sa      rd = rt >> sa, logical (zero fill)
+sra     rd, rt, sa      rd = rt >> sa, arithmetic (sign fill)
+        "sll $0, $0, 0" is the encoding of |mips-nop|.
+
+					*mips-sllv* *mips-srlv* *mips-srav*
+sllv    rd, rt, rs      rd = rt << (rs AND 31)
+srlv    rd, rt, rs      rd = rt >> (rs AND 31), logical
+srav    rd, rt, rs      rd = rt >> (rs AND 31), arithmetic
+        Note the operand order: the value is rt, the shift amount is rs.
+
+							*mips-rol* *mips-ror*
+rol     rd, rt, n       [PSEUDO] rotate left by n (register or constant)
+ror     rd, rt, n       [PSEUDO] rotate right
+        Built from two shifts and an or. MIPS32r2 adds real rotr/rotrv,
+        which SPIM does not implement.
+
+==============================================================================
+6. Comparisons (set)						*mips-compare*
+
+							*mips-slt*
+slt     rd, rs, rt      rd = (rs < rt) ? 1 : 0          signed
+							*mips-sltu*
+sltu    rd, rs, rt      rd = (rs < rt) ? 1 : 0          unsigned
+							*mips-slti*
+slti    rt, rs, imm     rt = (rs < sext(imm)) ? 1 : 0   signed
+							*mips-sltiu*
+sltiu   rt, rs, imm     rt = (rs < sext(imm)) ? 1 : 0   unsigned compare
+        The immediate is sign-extended first, then compared as unsigned.
+        "sltiu rd, rs, 1" sets rd to 1 when rs == 0.
+
+		*mips-seq* *mips-sne* *mips-sgt* *mips-sgtu* *mips-sge*
+		*mips-sgeu* *mips-sle* *mips-sleu*
+seq     rd, rs, rt      [PSEUDO] rd = (rs == rt)
+sne     rd, rs, rt      [PSEUDO] rd = (rs != rt)
+sgt     rd, rs, rt      [PSEUDO] rd = (rs > rt)     sgtu: unsigned
+sge     rd, rs, rt      [PSEUDO] rd = (rs >= rt)    sgeu: unsigned
+sle     rd, rs, rt      [PSEUDO] rd = (rs <= rt)    sleu: unsigned
+        All produce 0 or 1.
+
+==============================================================================
+7. Constants and moves						*mips-moves*
+
+							*mips-lui*
+lui     rt, imm         rt = imm << 16                 low half cleared
+
+							*mips-li*
+li      rd, value       [PSEUDO] load a 32-bit constant
+        One instruction (addiu or ori) when it fits in 16 bits, otherwise
+        lui + ori.
+
+							*mips-la*
+la      rd, label       [PSEUDO] load the address of label
+        Usually lui + ori. Contrast with lw, which loads the word stored at
+        the label: >
+            la      $t0, count      # $t0 = &count
+            lw      $t1, count      # $t1 = count
+            lw      $t1, 0($t0)     # same thing via the pointer
+<
+							*mips-move*
+move    rd, rs          [PSEUDO] rd = rs   (addu rd, $zero, rs)
+
+							*mips-nop*
+nop                     no operation (encoded as sll $0, $0, 0)
+
+==============================================================================
+8. Branches                                                    *mips-branches*
+
+Real branch instructions encode a signed 16-bit word offset from the
+instruction after the branch, a reach of about +/-128 KB. On real hardware
+the instruction after a branch (the delay slot) always executes. See
+|mips-delay-slot|.
+
+						*mips-beq* *mips-bne*
+beq     rs, rt, label   branch if rs == rt
+bne     rs, rt, label   branch if rs != rt
+
+			*mips-bgez* *mips-bgtz* *mips-blez* *mips-bltz*
+bgez    rs, label       branch if rs >= 0
+bgtz    rs, label       branch if rs > 0
+blez    rs, label       branch if rs <= 0
+bltz    rs, label       branch if rs < 0
+
+						*mips-bgezal* *mips-bltzal*
+bgezal  rs, label       if rs >= 0: $ra = return address, branch
+bltzal  rs, label       if rs < 0:  $ra = return address, branch
+        $ra is written even when the branch is not taken.
+
+							*mips-b*
+b       label           [PSEUDO] unconditional branch
+        (beq $zero, $zero, label or similar). PC-relative, unlike j.
+
+						*mips-beqz* *mips-bnez*
+beqz    rs, label       [PSEUDO] branch if rs == 0
+bnez    rs, label       [PSEUDO] branch if rs != 0
+
+		*mips-blt* *mips-bltu* *mips-ble* *mips-bleu*
+		*mips-bgt* *mips-bgtu* *mips-bge* *mips-bgeu*
+blt     rs, rt, label   [PSEUDO] branch if rs <  rt     bltu: unsigned
+ble     rs, rt, label   [PSEUDO] branch if rs <= rt     bleu: unsigned
+bgt     rs, rt, label   [PSEUDO] branch if rs >  rt     bgtu: unsigned
+bge     rs, rt, label   [PSEUDO] branch if rs >= rt     bgeu: unsigned
+        Expanded to slt/sltu into $at followed by beq/bne. For example: >
+            blt     $t0, $t1, L     # becomes:
+            slt     $at, $t0, $t1
+            bne     $at, $zero, L
+<       rt may also be an immediate, which costs an extra instruction.
+
+==============================================================================
+9. Jumps and calls						*mips-jumps*
+
+							*mips-j*
+j       label           jump. The 26-bit target replaces the low bits of
+                        the PC, so it stays within the current 256 MB region.
+							*mips-jal*
+jal     label           call: $ra = return address, then jump
+							*mips-jr*
+jr      rs              jump to the address in rs. "jr $ra" returns.
+							*mips-jalr*
+jalr    rs              call through a register: $ra = return address
+jalr    rd, rs          same, but the return address goes into rd
+
+==============================================================================
+10. Loads and stores						*mips-memory*
+
+All addressing is off(base): base register + sign-extended 16-bit offset.
+A label, or label+const, can be used in place of off(base); the assembler
+expands that into lui + the access, using $at.
+
+Halfword and word accesses must be naturally aligned or SPIM raises an
+address error.
+
+                                     *mips-lb* *mips-lbu* *mips-lh* *mips-lhu*
+lb      rt, off(base)   load byte, sign-extended
+lbu     rt, off(base)   load byte, zero-extended
+lh      rt, off(base)   load halfword, sign-extended
+lhu     rt, off(base)   load halfword, zero-extended
+							*mips-lw*
+lw      rt, off(base)   load word
+
+						*mips-sb* *mips-sh* *mips-sw*
+sb      rt, off(base)   store low byte of rt
+sh      rt, off(base)   store low halfword of rt
+sw      rt, off(base)   store word
+
+                                   *mips-lwl* *mips-lwr* *mips-swl* *mips-swr*
+lwl/lwr rt, off(base)   load the left/right part of an unaligned word
+swl/swr rt, off(base)   store the left/right part of an unaligned word
+        Used in pairs to access an unaligned word. Which half each one
+        handles depends on endianness.
+
+                                   *mips-ulw* *mips-usw* *mips-ulh* *mips-ush*
+ulw     rt, addr        [PSEUDO] unaligned load word   (lwl + lwr)
+usw     rt, addr        [PSEUDO] unaligned store word  (swl + swr)
+ulh/ulhu/ush            [PSEUDO] unaligned halfword forms
+
+							*mips-ll* *mips-sc*
+ll      rt, off(base)   load linked
+sc      rt, off(base)   store conditional: stores only if nothing has
+                        written the location since the ll; rt = 1 on
+                        success, 0 on failure. Atomic read-modify-write.
+
+							*mips-ld* *mips-sd*
+ld      rd, addr        [PSEUDO] load a doubleword into rd and rd+1
+sd      rd, addr        [PSEUDO] store rd and rd+1 as a doubleword
+
+==============================================================================
+11. Floating point (coprocessor 1)				*mips-float*
+
+".s" is single precision, ".d" double precision. Doubles live in an even
+register and the odd one after it ($f0/$f1, $f2/$f3, ...). In the o32
+convention, $f0 returns a float result and $f12 and $f14 carry the first two
+float arguments. $f20-$f31 are preserved across calls.
+
+                               *mips-lwc1* *mips-swc1* *mips-ldc1* *mips-sdc1*
+lwc1    ft, off(base)   load a word into FP register ft
+swc1    ft, off(base)   store FP register ft
+ldc1    ft, off(base)   load a double into ft/ft+1
+sdc1    ft, off(base)   store a double from ft/ft+1
+                                   *mips-l.s* *mips-l.d* *mips-s.s* *mips-s.d*
+l.s/l.d   ft, addr      [PSEUDO] load single/double (label or off(base))
+s.s/s.d   ft, addr      [PSEUDO] store single/double
+
+						*mips-mtc1* *mips-mfc1*
+mtc1    rt, fs          copy raw bits rt -> fs (no conversion)
+mfc1    rt, fs          copy raw bits fs -> rt (no conversion)
+        To turn an integer into a float: mtc1, then |mips-cvt.s.w|.
+
+						*mips-mov.s* *mips-mov.d*
+mov.s/mov.d   fd, fs    fd = fs
+
+		*mips-add.s* *mips-add.d* *mips-sub.s* *mips-sub.d*
+		*mips-mul.s* *mips-mul.d* *mips-div.s* *mips-div.d*
+add.s/add.d   fd, fs, ft    fd = fs + ft
+sub.s/sub.d   fd, fs, ft    fd = fs - ft
+mul.s/mul.d   fd, fs, ft    fd = fs * ft
+div.s/div.d   fd, fs, ft    fd = fs / ft
+
+		*mips-abs.s* *mips-abs.d* *mips-neg.s* *mips-neg.d*
+		*mips-sqrt.s* *mips-sqrt.d*
+abs.s/abs.d   fd, fs        fd = |fs|
+neg.s/neg.d   fd, fs        fd = -fs
+sqrt.s/sqrt.d fd, fs        fd = square root of fs
+
+		*mips-cvt.s.w* *mips-cvt.d.w* *mips-cvt.w.s* *mips-cvt.w.d*
+		*mips-cvt.s.d* *mips-cvt.d.s* *mips-cvt*
+cvt.s.w  fd, fs     int word in fs -> single
+cvt.d.w  fd, fs     int word in fs -> double
+cvt.w.s  fd, fs     single -> int word (stays in an FP register; mfc1 it)
+cvt.w.d  fd, fs     double -> int word
+cvt.s.d  fd, fs     double -> single
+cvt.d.s  fd, fs     single -> double
+        Read as cvt.<to>.<from>.
+
+		*mips-c.eq.s* *mips-c.eq.d* *mips-c.lt.s* *mips-c.lt.d*
+		*mips-c.le.s* *mips-c.le.d*
+c.eq.s/c.eq.d  fs, ft   condition flag = (fs == ft)
+c.lt.s/c.lt.d  fs, ft   condition flag = (fs <  ft)
+c.le.s/c.le.d  fs, ft   condition flag = (fs <= ft)
+                                                       *mips-bc1t* *mips-bc1f*
+bc1t    label           branch if the FP condition flag is true
+bc1f    label           branch if the FP condition flag is false
+        Example: >
+            c.lt.s  $f2, $f4
+            bc1t    less            # taken if $f2 < $f4
+<
+==============================================================================
+12. Exceptions and coprocessor 0				*mips-cp0*
+
+							*mips-syscall*
+syscall                 request a service from the OS / simulator.
+                        $v0 selects the service. See |mips-syscalls|.
+							*mips-break*
+break   code            raise a breakpoint exception
+						*mips-mfc0* *mips-mtc0*
+mfc0    rt, rd          rt = coprocessor 0 register rd
+mtc0    rt, rd          coprocessor 0 register rd = rt
+        Common cp0 registers in SPIM: $8 BadVAddr, $12 Status, $13 Cause,
+        $14 EPC.
+							*mips-eret* *mips-rfe*
+eret                    return from exception (MIPS32)
+rfe                     R2000-era return-from-exception. Older SPIM
+                        exception handlers use rfe; current SPIM uses eret.
+
+==============================================================================
+13. Assembler directives				*mips-directives*
+
+						*mips-.text* *mips-.data*
+.text [addr]        following items go in the user text (code) segment
+.data [addr]        following items go in the user data segment
+						*mips-.ktext* *mips-.kdata*
+.ktext [addr]       kernel text segment (exception handler code)
+.kdata [addr]       kernel data segment
+						*mips-.globl* *mips-.extern*
+.globl sym          make sym visible to other files. SPIM requires
+                    "main" to be global.
+.extern sym size    declare a global datum of size bytes
+					*mips-.word* *mips-.half* *mips-.byte*
+.word  v1, v2, ...  32-bit values. ".word v:n" repeats v n times.
+.half  v1, v2, ...  16-bit values
+.byte  v1, v2, ...  8-bit values
+						*mips-.float* *mips-.double*
+.float  f1, ...     single-precision values
+.double d1, ...     double-precision values
+						*mips-.ascii* *mips-.asciiz*
+.ascii  "str"       string without a terminating NUL
+.asciiz "str"       NUL-terminated string. Escapes: \n \t \"
+							*mips-.space*
+.space n            reserve n bytes
+							*mips-.align*
+.align n            align the next item on a 2^n byte boundary
+                    (.align 2 = word). ".align 0" turns off automatic
+                    alignment of .half/.word/.float/.double until the next
+                    .data or .kdata.
+							*mips-.set*
+.set noat           allow explicit use of $at; the assembler stops using it
+                    for pseudo-instructions.
+.set at             default: $at belongs to the assembler
+
+==============================================================================
+14. SPIM system calls                     *mips-syscalls* *mips-syscall-codes*
+
+Put the code in $v0 and the arguments in $a0-$a3 (or $f12 for float
+arguments), then execute |mips-syscall|.
+
+    $v0  Service        Arguments                       Result
+    1    print_int      $a0 = integer
+    2    print_float    $f12 = float
+    3    print_double   $f12 = double
+    4    print_string   $a0 = address of NUL-terminated string
+    5    read_int                                       $v0 = integer
+    6    read_float                                     $f0 = float
+    7    read_double                                    $f0 = double
+    8    read_string    $a0 = buffer, $a1 = length
+    9    sbrk           $a0 = bytes                     $v0 = address
+    10   exit
+    11   print_char     $a0 = character
+    12   read_char                                      $v0 = character
+    13   open           $a0 = name, $a1 = flags,        $v0 = fd
+                        $a2 = mode
+    14   read           $a0 = fd, $a1 = buffer,         $v0 = bytes read
+                        $a2 = length
+    15   write          $a0 = fd, $a1 = buffer,         $v0 = bytes written
+                        $a2 = length
+    16   close          $a0 = fd
+    17   exit2          $a0 = exit status
+
+read_string works like fgets: it reads up to length-1 characters and
+NUL-terminates; a newline, if one fits, is kept.
+
+Example: >
+        .data
+    msg:    .asciiz "Hello\n"
+        .text
+        .globl main
+    main:
+        li      $v0, 4          # print_string
+        la      $a0, msg
+        syscall
+        li      $v0, 10         # exit
+        syscall
+<
+==============================================================================
+15. Calling convention (o32)			*mips-calling* *mips-abi*
+
+Arguments      first four words in $a0-$a3, the rest on the stack. The
+               caller always reserves 16 bytes of stack for $a0-$a3 even
+               when they are passed in registers.
+Results        $v0 (and $v1 for 64-bit values)
+Return         jal sets $ra; the callee returns with "jr $ra"
+Caller-saved   $t0-$t9, $a0-$a3, $v0-$v1: assume a call changes them
+Callee-saved   $s0-$s7, $fp, $sp, $gp, $ra (if the callee calls further)
+Stack          grows down; $sp stays 8-byte aligned in o32.
+
+							*mips-frame*
+A typical non-leaf function: >
+    func:
+        addiu   $sp, $sp, -24       # 16 bytes arg area + $ra + padding
+        sw      $ra, 20($sp)
+        ...                         # body, may jal elsewhere
+        lw      $ra, 20($sp)
+        addiu   $sp, $sp, 24
+        jr      $ra
+<
+==============================================================================
+16. SPIM simulator notes				*mips-spim*
+
+						*mips-delay-slot* *mips-delay*
+Delay slots: real MIPS I hardware executes the instruction after a branch or
+jump before the branch takes effect, and the result of a load is not usable
+by the next instruction. SPIM does not simulate either by default. Use the
+command-line options "-delayed_branches" and "-delayed_loads" (or the
+matching QtSPIM settings) to make it behave like the hardware.
+
+							*mips-pseudo*
+Pseudo-instructions: SPIM accepts them by default. QtSPIM can be set to
+accept only bare machine instructions, which is a good way to check that you
+understand what each pseudo-instruction expands to.
+
+Endianness: SPIM uses the byte order of the machine it runs on, which is
+little-endian on x86 and Arm hosts.
+
+Command-line SPIM: "spim -file prog.s" assembles and runs a program. Plain
+"spim" starts an interactive prompt: load "prog.s", run, step, print $t0,
+breakpoint label, reinitialize, help.
+
+------------------------------------------------------------------------------
+ vim:tw=78:ts=8:noet:ft=help:norl:
