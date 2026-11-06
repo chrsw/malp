@@ -1,0 +1,6 @@
+Exercise 3.17  Convert the base 10 number 81 to a base 9 number.
+
+
+Solution 3.17
+81 is base 9 is 100
+100 = 9^2 * 1 + 9^1 * 0 + 9^0 * 0 = 81 + 0 + 0 = 81
