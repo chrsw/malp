@@ -11,7 +11,7 @@
 #       $a0:    used to pass the address of an array to the function
 #       $a1:    used to pass the length parameter e"N" to the function
 ##############################################################
-#   Psuedocode Description:
+#   Pseudocode Description:
 #
 ##############################################################
 
@@ -22,7 +22,7 @@ msg2:   .asciiz     "\n The sum of hte negative values = "
         .globl      main
         .text
 main:
-        li      $v0, 4      # system call for Print Sring
+        li      $v0, 4      # system call for Print String
         la      $a0, msg1   # load address of msg1 into $a0
         syscall             # print the string
 
@@ -31,7 +31,7 @@ main:
         jal     Sum         # Call Sum function
 
         move    $a0, $v0    # Sum of positive returned in $v0
-        li      $v0, 1      # system call ocde for Print Integer
+        li      $v0, 1      # system call code for Print Integer
         syscall
 
         li      $v0, 4      # system call code for Print String
@@ -57,10 +57,10 @@ main:
 #   words X of length N.
 ##############################################################
 #
-#   "X" is the address of an array passed to the funtion in $a0.
-#   "N" is the length of an array passed to the funtion in $a1.
+#   "X" is the address of an array passed to the function in $a0.
+#   "N" is the length of an array passed to the function in $a1.
 #   The function returns two values:
-#       (1) Sum of the positive emements SP passed back in $v0.
+#       (1) Sum of the positive elements SP passed back in $v0.
 #       (2) Sum of the negative elements SN passed back in $v1.  
 #       $a0 = Pointer to a string in memory
 #
@@ -74,12 +74,12 @@ main:
 ##############################################################
 #   Register Usage in Function:
 #   a0 = address pointer into the array
-#   a1 = loop counter (counds down to zero)
+#   a1 = loop counter (counts down to zero)
 #   t0 = a value read from the array in memory
 #   v0 = return sum of positive values
 #   v1 = return sum of negative values
 ##############################################################
-#   Algorithmic Description in Psuedocode:
+#   Algorithmic Description in Pseudocode:
 #   v0 = 0;
 #   v1 = 0;
 #   while( a1 > 0) do
@@ -99,9 +99,9 @@ Sum:    li      $v0, 0
 Loop:
         blez    $a1, Return     # If (a1 <= 0) branch to Return
         addi    $a1, $a1, -1    # Decrement loop count
-        lw      $t0, 0($a0)     # Geta value from the array
+        lw      $t0, 0($a0)     # Get a value from the array
         addi    $a0, $a0, 4     # Increment array pointer to next word
-        blez    $t0, Negative   # If value is negative branch to negg
+        blez    $t0, Negative   # If value is negative branch to negative
         add     $v0, $v0, $t0   # Add to positive sum
         b       Loop
 Negative:

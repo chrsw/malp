@@ -1,9 +1,9 @@
 ################ Example Main Program Header #################
-# Program # 1   : <descriptive name> Programmer : <your name>
-#   Due Date    : mm dd yyyy        Course: XYZ
+# Program # 1   : Sum numbers Programmer : chrsw
+#   Due Date    : mm dd yyyy        Course: N/A
 # Last Modified: month day hour: minute
 ##############################################################
-#   Write a MIPS assembly language progrma to find the sum of
+#   Write a MIPS assembly language program to find the sum of
 #   the first 100 words of data in the memory data segment with
 #   the label "chico". Store the resulting sum in the next
 #   memory location beyond the end of the array "chico".
@@ -12,7 +12,7 @@
 #       $a0:    used to pass the address of an array to the function
 #       $a1:    used to pass the length parameter "N" to the function
 ##############################################################
-#   Psuedocode Description:
+#   Pseudocode Description:
 #
 ##############################################################
 
@@ -48,9 +48,9 @@ main:
 #   passed in array.
 ##############################################################
 #
-#   "X" is the address of an array passed to the funtion in $a0.
-#   "N" is the length of an array passed to the funtion in $a1.
-#   Sum of the positive emements SP passed back in $v0.
+#   "X" is the address of an array passed to the function in $a0.
+#   "N" is the length of an array passed to the function in $a1.
+#   Sum of the positive elements SP passed back in $v0.
 #   $a0 = Pointer to a string in memory
 #
 ##############################################################
@@ -63,11 +63,11 @@ main:
 ##############################################################
 #   Register Usage in Function:
 #   a0 = address pointer into the array
-#   a1 = loop counter (counds down to zero)
+#   a1 = loop counter (counts down to zero)
 #   t0 = a value read from the array in memory
 #   v0 = return sum of positive values
 ##############################################################
-#   Algorithmic Description in Psuedocode:
+#   Algorithmic Description in Pseudocode:
 #   v0 = 0;
 #   while( a1 > 0) do
 #   {
@@ -82,7 +82,7 @@ Sum:    li      $v0, 0          # Initialize v0 to zero
 Loop:
         blez    $a1, Return     # If (a1 <= 0) branch to Return
         addi    $a1, $a1, -1    # Decrement loop count
-        lw      $t0, 0($a0)     # Geta value from the array
+        lw      $t0, 0($a0)     # Get a value from the array
         addi    $a0, $a0, 4     # Increment array pointer to next word
         add     $v0, $v0, $t0   # Add to positive sum
         b       Loop
