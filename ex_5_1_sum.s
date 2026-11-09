@@ -26,7 +26,7 @@ main:
         la      $a0, msg1   # load address of msg1 into $a0
         syscall             # print the string
 
-        la      $a0, chcio  # Initialize address Parameter
+        la      $a0, chico  # Initialize address Parameter
         li      $a1, 10     # Initialize length Parameter
         jal     Sum         # Call Sum function
 
@@ -50,8 +50,7 @@ main:
 #
 #   "X" is the address of an array passed to the function in $a0.
 #   "N" is the length of an array passed to the function in $a1.
-#   Sum of the positive elements SP passed back in $v0.
-#   $a0 = Pointer to a string in memory
+#   Sum of the array elements passed back in $v0.
 #
 ##############################################################
 #   Example calling sequence:
@@ -65,7 +64,7 @@ main:
 #   a0 = address pointer into the array
 #   a1 = loop counter (counts down to zero)
 #   t0 = a value read from the array in memory
-#   v0 = return sum of positive values
+#   v0 = return sum of array values
 ##############################################################
 #   Algorithmic Description in Pseudocode:
 #   v0 = 0;
@@ -74,7 +73,7 @@ main:
 #       a1 = a1 - 1;
 #       t0 = Mem(a0);
 #       a0 = a0 + 4;
-#       v1 = v1 + t0;
+#       v0 = v0 + t0;
 #   }
 #   Return
 ##############################################################
@@ -84,7 +83,7 @@ Loop:
         addi    $a1, $a1, -1    # Decrement loop count
         lw      $t0, 0($a0)     # Get a value from the array
         addi    $a0, $a0, 4     # Increment array pointer to next word
-        add     $v0, $v0, $t0   # Add to positive sum
+        add     $v0, $v0, $t0   # Add to sum
         b       Loop
 Return: jr      $ra             # Return
 
