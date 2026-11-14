@@ -1,12 +1,17 @@
 ################ Example Main Program Header #################
-# Program # 1   : Sum numbers Programmer : chrsw
-#   Due Date    : mm dd yyyy        Course: N/A
-# Last Modified: month day hour: minute
+# Program # 1   : Sum numbers       Programmer : chrsw
+# Due Date      : mm dd yyyy        Course: N/A
+# Last Modified : month day hour: minute
 ##############################################################
 #   Write a MIPS assembly language program to find the sum of
 #   the first 100 words of data in the memory data segment with
 #   the label "chico". Store the resulting sum in the next
 #   memory location beyond the end of the array "chico".
+#   Above is the exercise statement. The solution reduced
+#   the size of the input from 100 to 10 to make the work
+#   lighter. The principle and algorithm should be the same.
+#   If there's an easier way to declare 100 words, this will
+#   be revisited.
 ##############################################################
 #   Register Usage in Main:
 #       $a0:    used to pass the address of an array to the function
@@ -39,7 +44,7 @@ main:
 
 
 
-#################### Example Function Header #####################
+#################### Sum Function Header #####################
 # Function Name: Sum(&X, N)
 # Last Modified: month day hour: minute
 ##############################################################
